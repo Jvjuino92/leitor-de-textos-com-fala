@@ -34,45 +34,70 @@ const speakText = () => {
 const setVoice = event => {
     const selectedVoice = voices.find(voice => voice.name === event.target.value)
     utterance.voice = selectedVoice
-    console.log(selectedVoice)
 }
 
-const createExpressionBox = ({ img, text }) => {
-    const div = document.createElement('div')
+const addExpressionBoxesIntoDOM = () => {
+    main.innerHTML = humanExpressions.map(({ img, text }) => `
+        <div class="expression-box" data-js="${text}">
+            <img src="${img}" alt="${text}" data-js="${text}">
+            <p class="info" data-js="${text}">${text}</p>
+        </div>
+    `).join('')
+}
 
-    div.classList.add('expression-box')
-    div.innerHTML = `
-        <img src="${img}" alt="${text}">
-        <p class="info">${text}</p>
-    `
-    
-    div.addEventListener('click', () => {
-        setTextMessage(text)
+addExpressionBoxesIntoDOM()
+
+const setStyleOfClickedDiv = dataValue => {
+    const div = document.querySelector(`[data-js="${dataValue}"]`)
+    div.classList.add('active')
+    setTimeout(() => {
+        div.classList.remove('active')
+    }, 1000)
+}
+
+main.addEventListener('click', event => {
+    const clickedElement = event.target
+    const clickedElementText = clickedElement.dataset.js
+    const clickedElementMustBeSpoken = ['img', 'p'].some(elementName => 
+        clickedElement.tagName.toLowerCase() === elementName.toLowerCase())
+
+    if (clickedElementMustBeSpoken) {
+        setTextMessage(clickedElementText)
         speakText()
+        setStyleOfClickedDiv(clickedElementText)
+    }
+})
 
-        div.classList.add('active')
-        setTimeout(() => {
-            div.classList.remove('active')
-        }, 1000)
-    })
-
-    main.appendChild(div)
+const insertOptionsElementIntoDOM = voices => {
+    selectElement.innerHTML = voices.reduce((accumulator, { name, lang }) => {
+        accumulator += `<option value="${name}">${lang} | ${name}</option>`
+        return accumulator
+    }, '')
 }
-
-humanExpressions.forEach(createExpressionBox)
 
 let voices = []
 
 speechSynthesis.addEventListener('voiceschanged', () => {
     voices = speechSynthesis.getVoices()
 
-    voices.forEach(({ name, lang }) => {
-        const option = document.createElement('option')
+    insertOptionsElementIntoDOM(voices)
 
-        option.value = name
-        option.textContent = `${lang} | ${name}`
-        selectElement.appendChild(option)
-    })
+    const googleVoice = voices.find(voice => 
+        voice.name === 'Google Português do Brasil')
+    const microsoftVoice = voices.find(voice => 
+        voice.name === 'Microsoft David - English (United States)')
+
+    if (googleVoice) {
+        utterance.voice = googleVoice
+        const googleOptionElement = selectElement
+            .querySelector(`[value="${googleVoice.name}"]`)
+        googleOptionElement.selectElement = true
+    } else if (microsoftVoice) {
+        utterance.voice = microsoftVoice
+        const microsoftOptionElement = selectElement
+            .querySelector(`[value="${microsoftVoice.name}"]`)
+        microsoftOptionElement.selectElement = true
+    }
 })
 
 buttonInsertText.addEventListener('click', () => {
