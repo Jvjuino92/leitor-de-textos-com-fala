@@ -85,7 +85,7 @@ speechSynthesis.addEventListener('voiceschanged', () => {
     const googleVoice = voices.find(voice => 
         voice.name === 'Google Português do Brasil')
     const microsoftVoice = voices.find(voice => 
-        voice.name === 'Microsoft David - English (United States)')
+        voice.name === 'Microsoft Mark - English (United States)')
 
     if (googleVoice) {
         utterance.voice = googleVoice
